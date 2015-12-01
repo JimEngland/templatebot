@@ -1,8 +1,5 @@
 source 'https://rubygems.org'
 gem 'sinatra'
 gem 'httparty'
-gem 'rubygems'
-gem 'json'
-gem 'enumerator'
 gem 'fastimage'
 gem 'htmlentities'
