@@ -6,6 +6,11 @@ require 'fastimage'
 require 'sinatra'
 require 'htmlentities'
 
+get '/new' do
+  erb :new, :layout => :template
+end
+
+
 get '/' do
   erb :index, :layout => :template
 end
@@ -19,6 +24,7 @@ post '/' do
   cta_url = params[:cta_url]
   show_product_titles = params[:show_product_titles]
   show_product_prices = params[:show_product_prices]
+  show_discount = params[:show_discount]
 
   #Conditionals
   if !page_description.empty?
@@ -40,6 +46,11 @@ post '/' do
     no_price = "false"
   else
     no_price = "true"
+  end
+  if !show_discount.nil?
+    discount = "true"
+  else
+    discount = "false"
   end
 
   #Get the SKUs from Sheetsu
@@ -118,10 +129,6 @@ post '/' do
     product_image_url = item["image_link"]
     product_size = FastImage.size(product_image_url)
 
-
-    puts product_size.nil?
-
-    ####### This doesn't work yet #######
     if product_size.nil?
       product_image_orientation = "Landscape"      
     else 
@@ -129,11 +136,8 @@ post '/' do
         product_image_orientation = "Landscape"
       else
         product_image_orientation = "Portrait"
-      end
-      
+      end      
     end
-
-    puts product_image_orientation
 
     product_title = item["title"]
     product_designer = item["brand"]
@@ -152,6 +156,9 @@ post '/' do
       product_strikethrough_price.slice! " USD"
       product_strikethrough_price = product_strikethrough_price[0...-3]    
     end
+
+    discount_percentage = item["discount"]
+    puts discount_percentage
 
     @text_output += "<%Designer%>\n<%URL%>\n\n"
 
@@ -190,9 +197,9 @@ post '/' do
                 <a href="<%URL%>" target="_blank">
     EOT
 
-    puts "Product Orientation is #{product_image_orientation}"
+    
     if product_image_orientation == "Landscape"
-      puts "Landscape!!!"
+     
       @html_output << (<<-EOT)
         <img alt="" border="0" src="<%ImageURL%>" width="180"/>
       EOT
@@ -239,6 +246,12 @@ post '/' do
       @html_output << (<<-EOT)
         </div>
       EOT
+    else
+      if discount == "true"
+        @html_output << (<<-EOT)
+              <div class="h4" style="color:#2d2829; font-family:Arial; font-size:13px; line-height:16px; text-align:center; font-weight:bold;letter-spacing:1px"><span class="h4" style="color:#2d2829; font-family:Arial; font-size:13px; line-height:16px; letter-spacing:1px; text-align:center; font-weight:bold; letter-spacing:1px"><%Discount%> OFF</span>
+        EOT
+      end
     end
 
     @html_output << (<<-EOT)              
@@ -260,6 +273,8 @@ post '/' do
     @html_output = @html_output.gsub('<%Designer%>', product_designer )
     @html_output = @html_output.gsub('<%Price%>', product_price )
     @html_output = @html_output.gsub('<%StrikethroughPrice%>', product_strikethrough_price )
+    @html_output = @html_output.gsub('<%Discount%>', discount_percentage )
+    
   end
 
   @text_output << (<<-EOT)
